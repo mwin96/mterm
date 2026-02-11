@@ -516,8 +516,7 @@ impl CommandPalette {
             }))
             .min_width(Some(Dimension::Pixels(desired_pixel_width)));
 
-        let x_adjust =
-            ((avail_pixel_width - padding_left - left_bar_width) - desired_pixel_width) / 2.;
+        let x_adjust = ((avail_pixel_width - padding_left) - desired_pixel_width) / 2.;
 
         let computed = term_window.compute_element(
             &LayoutContext {

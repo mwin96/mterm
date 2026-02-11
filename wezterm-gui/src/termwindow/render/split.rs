@@ -53,6 +53,7 @@ impl crate::TermWindow {
             self.ui_items.push(UIItem {
                 x: border.left.get() as usize
                     + padding_left as usize
+                    + left_bar_offset as usize
                     + (split.left * cell_width as usize),
                 width: cell_width as usize,
                 y: padding_top as usize
@@ -76,6 +77,7 @@ impl crate::TermWindow {
             self.ui_items.push(UIItem {
                 x: border.left.get() as usize
                     + padding_left as usize
+                    + left_bar_offset as usize
                     + (split.left * cell_width as usize),
                 width: split.size * cell_width as usize,
                 y: padding_top as usize
