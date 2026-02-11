@@ -1,5 +1,5 @@
 use crate::termwindow::{PaneInformation, TabInformation, UIItem, UIItemType};
-use config::{ConfigHandle, TabBarColors};
+use config::{ConfigHandle, TabBarColors, TabBarPosition};
 use finl_unicode::grapheme_clusters::Graphemes;
 use mlua::FromLua;
 use termwiz::cell::{unicode_column_width, Cell, CellAttributes};
@@ -425,7 +425,7 @@ impl TabBarState {
         if use_integrated_title_buttons
             && config.integrated_title_button_style == IntegratedTitleButtonStyle::MacOsNative
             && config.use_fancy_tab_bar == false
-            && config.tab_bar_at_bottom == false
+            && config.resolved_tab_bar_position() == TabBarPosition::Top
         {
             for _ in 0..10 as usize {
                 line.insert_cell(0, black_cell.clone(), title_width, SEQ_ZERO);
