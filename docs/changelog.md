@@ -22,6 +22,9 @@ usually the best available version.
 As features stabilize some brief notes about them will accumulate here.
 
 #### Changed
+* DECRQCRA is now disabled by default to prevent silent screen scraping.
+  Set `enable_checksum_rectangular_area = true` to re-enable it.
+  Thanks to @jquast! #7701
 * Wayland: currently being reimplemented, it maybe more unstable than usual.
   Please file GH issues for any problems you see.
   Many thanks to @tzx and @tmccombs! #4777 #5781
@@ -67,6 +70,7 @@ As features stabilize some brief notes about them will accumulate here.
 * `wezterm imgcat --hold` now avoids local echo and accepts pressing `Escape`,
   `CTRL-C` and `CTRL-D` as various ways of exiting hold mode. Thanks to
   @mgpinf! #6801
+* windows: Improve detection of running in WSL. Thanks to @bew! #7137
 
 #### New
 * [wezterm.serde](config/lua/wezterm.serde/index.md) module for serialization
@@ -254,6 +258,8 @@ As features stabilize some brief notes about them will accumulate here.
 * macOS: Fix toast notifications. Thanks to @nikhilm! #7483
 * termwiz: Fixed parsing of fragmented mouse reporting sequence. Thanks to
   @jgiannuzzi! #7076 #7504
+* docs: add missing `panes` field to [TabInformation](config/lua/TabInformation.md).
+  Thanks to @KevinSilvester! #7710
 
 #### Updated
 * Bundled conpty.dll and OpenConsole.exe to build 1.22.250204002.nupkg
