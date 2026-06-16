@@ -9,6 +9,7 @@ use crate::utilsprites::RenderMetrics;
 use config::{Dimension, DimensionContext, TabBarColors, TabBarPosition};
 use std::rc::Rc;
 use wezterm_font::LoadedFont;
+use termwiz::color::SrgbaTuple;
 use wezterm_term::color::{ColorAttribute, ColorPalette};
 use window::{IntegratedTitleButtonAlignment, IntegratedTitleButtonStyle};
 
@@ -473,6 +474,23 @@ impl crate::TermWindow {
         let new_tab_hover = colors.new_tab_hover();
         let active_tab = colors.active_tab();
 
+        // While a tab is being click-dragged, give it a "lifted" look by
+        // shifting its background lightness until the mouse is released.
+        let dragging_tab_idx = self.dragging.as_ref().and_then(|(d, _)| match d.item_type {
+            UIItemType::TabBar(TabBarItem::Tab { tab_idx, .. }) => Some(tab_idx),
+            _ => None,
+        });
+        let is_dragging =
+            matches!(item.item, TabBarItem::Tab { tab_idx, .. } if Some(tab_idx) == dragging_tab_idx);
+        let drag_bg = |c: SrgbaTuple| -> SrgbaTuple {
+            if is_dragging {
+                // Orange (#FFA500) while the tab is being dragged.
+                SrgbaTuple(1.0, 0.647, 0.0, 1.0)
+            } else {
+                c
+            }
+        };
+
         match item.item {
             TabBarItem::RightStatus | TabBarItem::LeftStatus | TabBarItem::None => element
                 .item_type(UIItemType::TabBar(TabBarItem::None))
@@ -559,12 +577,10 @@ impl crate::TermWindow {
                 }))
                 .colors(ElementColors {
                     border: BorderColor::new(
-                        bg_color
-                            .unwrap_or_else(|| active_tab.bg_color.into())
+                        drag_bg(bg_color.unwrap_or_else(|| active_tab.bg_color.into()))
                             .to_linear(),
                     ),
-                    bg: bg_color
-                        .unwrap_or_else(|| active_tab.bg_color.into())
+                    bg: drag_bg(bg_color.unwrap_or_else(|| active_tab.bg_color.into()))
                         .to_linear()
                         .into(),
                     text: fg_color
@@ -612,8 +628,7 @@ impl crate::TermWindow {
                 }))
                 .colors({
                     let inactive_tab = colors.inactive_tab();
-                    let bg = bg_color
-                        .unwrap_or_else(|| inactive_tab.bg_color.into())
+                    let bg = drag_bg(bg_color.unwrap_or_else(|| inactive_tab.bg_color.into()))
                         .to_linear();
                     let edge = colors.inactive_tab_edge().to_linear();
                     ElementColors {

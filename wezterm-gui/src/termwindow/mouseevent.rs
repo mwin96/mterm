@@ -139,7 +139,10 @@ impl super::TermWindow {
                     return;
                 }
                 if press == &MousePress::Left && self.dragging.take().is_some() {
-                    // Completed a drag
+                    // Completed a drag; rebuild the (cached) tab bar and repaint
+                    // so the drag highlight clears.
+                    self.invalidate_fancy_tab_bar();
+                    context.invalidate();
                     return;
                 }
             }
