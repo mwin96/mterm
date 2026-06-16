@@ -356,21 +356,33 @@ impl super::TermWindow {
         start_event: MouseEvent,
         event: MouseEvent,
     ) {
-        let current_x = event.coords.x;
-        let drag_right = current_x.saturating_sub(start_event.coords.x) > 0;
-        let delta = if drag_right { 1 } else { -1 };
+        // Project the pointer onto the axis the tab bar runs along: x for a
+        // horizontal bar (Top/Bottom), y for a vertical bar (Left/Right).
+        let vertical = self.config.resolved_tab_bar_position().is_vertical();
+        let current = if vertical { event.coords.y } else { event.coords.x };
+        let start = if vertical {
+            start_event.coords.y
+        } else {
+            start_event.coords.x
+        };
+
+        let drag_forward = current.saturating_sub(start) > 0;
+        let delta = if drag_forward { 1 } else { -1 };
 
         let next_tab_idx = tab_idx.saturating_add_signed(delta);
         if let Some(next_tab) = self.find_tab_item_by_idx(next_tab_idx) {
-            let next_tab_midpoint = next_tab.x.saturating_add(next_tab.width / 2) as isize;
-            let over_threshold = (drag_right && current_x > next_tab_midpoint)
-                || (!drag_right && current_x < next_tab_midpoint);
-            if over_threshold {
-                if let Ok(_) = self.move_tab_relative(delta) {
-                    if let Some(tab) = self.find_tab_item_by_idx(next_tab_idx) {
-                        // Ensure we have updated tab index
-                        item = tab.clone();
-                    }
+            let (origin, size) = if vertical {
+                (next_tab.y, next_tab.height)
+            } else {
+                (next_tab.x, next_tab.width)
+            };
+            let next_tab_midpoint = origin.saturating_add(size / 2) as isize;
+            let over_threshold = (drag_forward && current > next_tab_midpoint)
+                || (!drag_forward && current < next_tab_midpoint);
+            if over_threshold && self.move_tab_relative(delta).is_ok() {
+                if let Some(tab) = self.find_tab_item_by_idx(next_tab_idx) {
+                    // Ensure we have updated tab index
+                    item = tab.clone();
                 }
             }
         }
