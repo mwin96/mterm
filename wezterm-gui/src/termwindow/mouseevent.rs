@@ -596,8 +596,10 @@ impl super::TermWindow {
                 TabBarItem::NewTabButton { .. } => {
                     self.do_new_tab_button_click(MousePress::Right);
                 }
-                TabBarItem::None
-                | TabBarItem::LeftStatus
+                TabBarItem::None => {
+                    self.show_tab_bar_position_picker();
+                }
+                TabBarItem::LeftStatus
                 | TabBarItem::RightStatus
                 | TabBarItem::WindowButton(_) => {}
             },

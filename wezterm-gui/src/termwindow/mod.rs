@@ -2428,6 +2428,67 @@ impl TermWindow {
         self.show_launcher_impl(args, active_tab_idx);
     }
 
+    /// Apply `pos` as a runtime config override and re-render. Preserves any
+    /// other overrides already in effect (e.g. opacity set via lua).
+    pub fn set_tab_bar_position(&mut self, pos: config::TabBarPosition) {
+        use wezterm_dynamic::{ToDynamic, Value};
+        let mut obj = match self.config_overrides.clone() {
+            Value::Object(o) => o,
+            _ => std::collections::BTreeMap::new().into(),
+        };
+        obj.insert(
+            Value::String("tab_bar_position".to_string()),
+            pos.to_dynamic(),
+        );
+        let value = Value::Object(obj);
+        if value != self.config_overrides {
+            self.config_overrides = value;
+            self.config_was_reloaded();
+        }
+    }
+
+    fn cycle_tab_bar_position(&mut self) {
+        use config::TabBarPosition::*;
+        let next = match self.config.resolved_tab_bar_position() {
+            Top => Left,
+            Left => Bottom,
+            Bottom => Right,
+            Right => Top,
+        };
+        self.set_tab_bar_position(next);
+    }
+
+    /// Overlay picker listing the four tab-bar positions, the active one
+    /// marked. Selection routes through `KeyAssignment::SetTabBarPosition`
+    /// (dispatched in Rust by the selector overlay; no lua callback needed).
+    pub fn show_tab_bar_position_picker(&mut self) {
+        use config::keyassignment::{InputSelector, InputSelectorEntry, KeyAssignment};
+        use config::TabBarPosition;
+        let current = self.config.resolved_tab_bar_position();
+        let choices = [
+            TabBarPosition::Top,
+            TabBarPosition::Bottom,
+            TabBarPosition::Left,
+            TabBarPosition::Right,
+        ]
+        .iter()
+        .map(|pos| InputSelectorEntry {
+            label: format!("{} {pos:?}", if *pos == current { "✓" } else { " " }),
+            id: Some(format!("{pos:?}")),
+        })
+        .collect();
+        let args = InputSelector {
+            action: Box::new(KeyAssignment::SetTabBarPosition(current)),
+            title: "Select tab bar position".to_string(),
+            choices,
+            fuzzy: false,
+            alphabet: "1234".to_string(),
+            description: "Select the tab bar position".to_string(),
+            fuzzy_description: String::new(),
+        };
+        self.show_input_selector(&args);
+    }
+
     fn show_launcher(&mut self) {
         let title = "Launcher".to_string();
         let args = LauncherActionArgs {
@@ -3206,6 +3267,8 @@ impl TermWindow {
             PromptInputLine(args) => self.show_prompt_input_line(args),
             InputSelector(args) => self.show_input_selector(args),
             Confirmation(args) => self.show_confirmation(args),
+            SetTabBarPosition(pos) => self.set_tab_bar_position(*pos),
+            CycleTabBarPosition => self.cycle_tab_bar_position(),
         };
         Ok(PerformAssignmentResult::Handled)
     }

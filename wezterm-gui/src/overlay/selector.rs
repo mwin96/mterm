@@ -1,7 +1,11 @@
 use crate::overlay::quickselect;
 use crate::scripting::guiwin::GuiWin;
+use crate::termwindow::TermWindowNotif;
 use config::configuration;
 use config::keyassignment::{InputSelector, InputSelectorEntry, KeyAssignment};
+use config::TabBarPosition;
+use wezterm_dynamic::FromDynamic;
+use window::WindowOps;
 use mux::termwiztermtab::TermWizTerminal;
 use mux_lua::MuxPane;
 use nucleo_matcher::pattern::Pattern;
@@ -205,6 +209,29 @@ impl SelectorState {
     }
 
     fn trigger_event(&self, entry: Option<InputSelectorEntry>) {
+        // SetTabBarPosition is dispatched directly on the window; the chosen
+        // position is carried in the selected entry's id (e.g. "Left").
+        if matches!(*self.args.action, KeyAssignment::SetTabBarPosition(_)) {
+            if let Some(pos) = entry
+                .as_ref()
+                .and_then(|e| e.id.as_ref())
+                .and_then(|id| {
+                    TabBarPosition::from_dynamic(
+                        &wezterm_dynamic::Value::String(id.to_string()),
+                        Default::default(),
+                    )
+                    .ok()
+                })
+            {
+                self.window.window.notify(TermWindowNotif::PerformAssignment {
+                    pane_id: self.pane.0,
+                    assignment: KeyAssignment::SetTabBarPosition(pos),
+                    tx: None,
+                });
+            }
+            return;
+        }
+
         let name = self.event_name.clone();
         let window = self.window.clone();
         let pane = self.pane.clone();
@@ -420,6 +447,8 @@ pub fn selector(
 ) -> anyhow::Result<()> {
     let event_name = match *args.action {
         KeyAssignment::EmitEvent(ref id) => id.to_string(),
+        // Dispatched in Rust (see trigger_event); no lua callback required.
+        KeyAssignment::SetTabBarPosition(_) => String::new(),
         _ => {
             anyhow::bail!("InputSelector requires action to be defined by wezterm.action_callback")
         }

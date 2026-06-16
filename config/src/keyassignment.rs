@@ -646,6 +646,8 @@ pub enum KeyAssignment {
     PromptInputLine(PromptInputLine),
     InputSelector(InputSelector),
     Confirmation(Confirmation),
+    SetTabBarPosition(crate::TabBarPosition),
+    CycleTabBarPosition,
 }
 impl_lua_conversion_dynamic!(KeyAssignment);
 

@@ -2011,6 +2011,22 @@ pub fn derive_command_from_key_assignment(action: &KeyAssignment) -> Option<Comm
             menubar: &["Edit"],
             icon: None,
         },
+        CycleTabBarPosition => CommandDef {
+            brief: "Cycle tab bar position".into(),
+            doc: "Cycles the tab bar between Top, Left, Bottom and Right".into(),
+            keys: vec![(Modifiers::CTRL.union(Modifiers::SHIFT), "e".into())],
+            args: &[ArgType::ActiveWindow],
+            menubar: &["Window"],
+            icon: None,
+        },
+        SetTabBarPosition(pos) => CommandDef {
+            brief: format!("Set tab bar position to {pos:?}").into(),
+            doc: "Sets the position of the tab bar".into(),
+            keys: vec![],
+            args: &[ArgType::ActiveWindow],
+            menubar: &[],
+            icon: None,
+        },
     })
 }
 
@@ -2064,6 +2080,7 @@ fn compute_default_actions() -> Vec<KeyAssignment> {
         ScrollToTop,
         ScrollToBottom,
         // ----------------- Window
+        CycleTabBarPosition,
         ToggleFullScreen,
         ToggleAlwaysOnTop,
         ToggleAlwaysOnBottom,
