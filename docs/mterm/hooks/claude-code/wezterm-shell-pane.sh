@@ -1,12 +1,12 @@
 #!/bin/bash
 # wezterm-shell-pane.sh - focus-safe compact panel for long foreground commands.
-# Ported from the Quietly Alive Copilot adapter to Claude Code: --hook reads a
+# Ported from the MTerm Copilot adapter to Claude Code: --hook reads a
 # PreToolUse payload (tool_input object) and rewrites the Bash tool command via
 # hookSpecificOutput.updatedInput; --run streams the wrapped command into a
 # bottom WezTerm pane when it outlives the 2s threshold.
 
 # wezterm cli must be reachable even when the hook runs outside a login shell.
-PATH="/Applications/WezTerm.app/Contents/MacOS:$PATH"
+PATH="/Applications/MTerm.app/Contents/MacOS:/Applications/WezTerm.app/Contents/MacOS:$PATH"
 
 hook_mode() {
   local input tool_input command description command_b64 description_b64 modified_input runner

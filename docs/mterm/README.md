@@ -1,19 +1,19 @@
-# Quietly Alive
+# MTerm
 
-Quietly Alive turns WezTerm's vertical tab rail into a calm control center for shell and AI coding sessions.
+MTerm turns WezTerm's vertical tab rail into a calm control center for shell and AI coding sessions.
 It preserves normal terminal behavior while adding named categories, activity subtitles, stable focus, compact long-command output, and a translucent animated Rosé Pine appearance.
 
 This directory contains the complete user-level setup needed to reproduce the experience from this fork.
 
-![Quietly Alive vertical tab rail](quietly-alive-sidebar.png)
+![MTerm vertical tab rail](mterm-sidebar.png)
 
 ## Included files
 
 | Path | Purpose |
 | --- | --- |
-| `wezterm.lua` | Complete Quietly Alive WezTerm configuration |
-| `assets/quietly-alive-aurora.png` | True-alpha animated aurora background |
-| `assets/quietly-alive-dots.png` | Static Retina dot field |
+| `wezterm.lua` | Complete MTerm WezTerm configuration |
+| `assets/mterm-aurora.png` | True-alpha animated aurora background |
+| `assets/mterm-dots.png` | Static Retina dot field |
 | `tools/generate-wezterm-aurora.swift` | Reproducible macOS asset generator |
 | `hooks/session-status.sh` | Copilot activity, state, and session-label adapter |
 | `hooks/session-status.json` | Copilot lifecycle-hook registration |
@@ -113,9 +113,9 @@ Then copy the bundled configuration and assets:
 
 ```bash
 mkdir -p ~/.config/wezterm/assets
-cp docs/quietly-alive/wezterm.lua ~/.config/wezterm/wezterm.lua
-cp docs/quietly-alive/assets/quietly-alive-aurora.png ~/.config/wezterm/assets/
-cp docs/quietly-alive/assets/quietly-alive-dots.png ~/.config/wezterm/assets/
+cp docs/mterm/wezterm.lua ~/.config/wezterm/wezterm.lua
+cp docs/mterm/assets/mterm-aurora.png ~/.config/wezterm/assets/
+cp docs/mterm/assets/mterm-dots.png ~/.config/wezterm/assets/
 ```
 
 The bundled configuration uses `WEZTERM_DEFAULT_CWD` when it is set.
@@ -127,10 +127,10 @@ Copy the scripts and hook registrations:
 
 ```bash
 mkdir -p ~/.copilot/hooks
-cp docs/quietly-alive/hooks/session-status.sh ~/.copilot/hooks/
-cp docs/quietly-alive/hooks/session-status.json ~/.copilot/hooks/
-cp docs/quietly-alive/hooks/wezterm-shell-pane.sh ~/.copilot/hooks/
-cp docs/quietly-alive/hooks/wezterm-shell-panes.json ~/.copilot/hooks/
+cp docs/mterm/hooks/session-status.sh ~/.copilot/hooks/
+cp docs/mterm/hooks/session-status.json ~/.copilot/hooks/
+cp docs/mterm/hooks/wezterm-shell-pane.sh ~/.copilot/hooks/
+cp docs/mterm/hooks/wezterm-shell-panes.json ~/.copilot/hooks/
 chmod +x ~/.copilot/hooks/session-status.sh
 chmod +x ~/.copilot/hooks/wezterm-shell-pane.sh
 ```
@@ -147,8 +147,8 @@ Copy the scripts and register the hooks:
 
 ```bash
 mkdir -p ~/.claude/hooks
-cp docs/quietly-alive/hooks/claude-code/session-status.sh ~/.claude/hooks/
-cp docs/quietly-alive/hooks/claude-code/wezterm-shell-pane.sh ~/.claude/hooks/
+cp docs/mterm/hooks/claude-code/session-status.sh ~/.claude/hooks/
+cp docs/mterm/hooks/claude-code/wezterm-shell-pane.sh ~/.claude/hooks/
 chmod +x ~/.claude/hooks/session-status.sh ~/.claude/hooks/wezterm-shell-pane.sh
 ```
 
@@ -181,9 +181,9 @@ Running GUI processes keep the old executable in memory.
 The generator uses macOS AppKit, ImageIO, and UniformTypeIdentifiers:
 
 ```bash
-swift docs/quietly-alive/tools/generate-wezterm-aurora.swift \
-  docs/quietly-alive/assets/quietly-alive-aurora.png \
-  docs/quietly-alive/assets/quietly-alive-dots.png
+swift docs/mterm/tools/generate-wezterm-aurora.swift \
+  docs/mterm/assets/mterm-aurora.png \
+  docs/mterm/assets/mterm-dots.png
 ```
 
 The generated aurora is a 240-frame, 30 FPS APNG with real alpha and an exact eight-second loop.
@@ -214,7 +214,7 @@ Horizontal tab bars intentionally omit category headings, category controls, and
 
 ## Preparing a later commit
 
-All Quietly Alive source changes and supporting files now live in this repository.
+All MTerm source changes and supporting files now live in this repository.
 Review `git status` and `git diff` before creating a commit.
 The generated APNG stays below GitHub's individual-file limit but may make the first push slower.
 

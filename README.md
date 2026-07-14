@@ -5,8 +5,8 @@
 Upstream WezTerm docs and guide at: https://wezterm.org/
 
 > [!NOTE]
-> MTerm adds the **Quietly Alive** vertical AI-session rail, named tab categories, activity subtitles, focus-safe command panels, and translucent animated theme.
-> See [`docs/quietly-alive/README.md`](docs/quietly-alive/README.md) for controls, installation, architecture, adapters, and the metadata contract.
+> MTerm adds a vertical AI-session rail, named tab categories, activity subtitles, focus-safe command panels, and a translucent animated theme.
+> See [`docs/mterm/README.md`](docs/mterm/README.md) for controls, installation, architecture, adapters, and the metadata contract.
 >
 > MTerm is a personal fork of [WezTerm](https://github.com/wezterm/wezterm) by Wez Furlong, built on the vertical-tabs work from [gilescope's](https://github.com/gilescope/wezterm) `giles-vertical-tabs-drag-reorder` branch. Upstream copyright and MIT license are preserved.
 

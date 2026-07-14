@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # session-status.sh - reflect the Claude Code session label + turn state in the
 # terminal/tab title and play a sound at meaningful transitions. Ported from
-# the Quietly Alive Copilot adapter: reads Claude Code hook payloads (see the
+# the MTerm Copilot adapter: reads Claude Code hook payloads (see the
 # hooks section of ~/.claude/settings.json) but emits the same generic WezTerm
 # contract (COPILOT_STATE / COPILOT_LABEL / WEZTERM_ACTIVITY user vars plus the
 # " · doing:" title fallback). Arg $1: working | done | ready | input | notification

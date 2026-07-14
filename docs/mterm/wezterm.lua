@@ -22,8 +22,8 @@ local palette = {
   iris = "#c4a7e7",
 }
 local ambient_base = "#191724"
-local ambient_aurora_path = wezterm.config_dir .. "/assets/quietly-alive-aurora.png"
-local ambient_dots_path = wezterm.config_dir .. "/assets/quietly-alive-dots.png"
+local ambient_aurora_path = wezterm.config_dir .. "/assets/mterm-aurora.png"
+local ambient_dots_path = wezterm.config_dir .. "/assets/mterm-dots.png"
 local normal_update_interval = 100
 local calm_update_interval = 1000
 local middot = utf8.char(0x00b7)
@@ -521,7 +521,7 @@ wezterm.on("toggle-calm-mode", function(window)
   end
   window:set_config_overrides(overrides)
   window:toast_notification(
-    "Quietly Alive",
+    "MTerm",
     was_calm and "Ambient motion restored" or "Calm mode enabled",
     nil,
     1500
