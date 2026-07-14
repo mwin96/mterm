@@ -5,11 +5,11 @@
       <stop offset="1" stop-color="#191724"/>
     </linearGradient>
   </defs>
-  <rect x="16" y="16" width="480" height="480" rx="96" fill="url(#mterm-bg)" stroke="#c4a7e7" stroke-opacity="0.35" stroke-width="8"/>
-  <circle cx="92" cy="92" r="13" fill="#eb6f92"/>
-  <circle cx="136" cy="92" r="13" fill="#f6c177"/>
-  <circle cx="180" cy="92" r="13" fill="#9ccfd8"/>
-  <text x="92" y="352" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="170" font-weight="700" fill="#9ccfd8">$</text>
-  <text x="196" y="352" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="230" font-weight="800" fill="#c4a7e7">M</text>
-  <rect x="352" y="332" width="66" height="20" rx="4" fill="#e0def4" opacity="0.85"/>
+  <rect x="50" y="50" width="412" height="412" rx="92" fill="url(#mterm-bg)"/>
+  <circle cx="115" cy="115" r="11" fill="#eb6f92"/>
+  <circle cx="153" cy="115" r="11" fill="#f6c177"/>
+  <circle cx="191" cy="115" r="11" fill="#9ccfd8"/>
+  <text x="115" y="338" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="146" font-weight="700" fill="#9ccfd8">$</text>
+  <text x="204" y="338" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="197" font-weight="800" fill="#c4a7e7">M</text>
+  <rect x="338" y="321" width="57" height="17" rx="4" fill="#e0def4" opacity="0.85"/>
 </svg>
