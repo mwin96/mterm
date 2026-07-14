@@ -567,6 +567,32 @@ config.keys = {
   },
 }
 
+-- Windows-style clipboard keys. WezTerm only binds Ctrl+Shift+C/V by default,
+-- so plain Ctrl+V sends a raw ^V that TUIs ignore. Windows-only: on macOS a
+-- raw ^V is Claude Code's paste-image shortcut (Windows uses Alt+V, which
+-- stays untouched). Ctrl+C copies only while text is selected, so it still
+-- interrupts the running app the rest of the time.
+if is_windows then
+  table.insert(config.keys, {
+    key = "v",
+    mods = "CTRL",
+    action = wezterm.action.PasteFrom("Clipboard"),
+  })
+  table.insert(config.keys, {
+    key = "c",
+    mods = "CTRL",
+    action = wezterm.action_callback(function(window, pane)
+      local selection = window:get_selection_text_for_pane(pane)
+      if selection and #selection > 0 then
+        window:perform_action(wezterm.action.CopyTo("ClipboardAndPrimarySelection"), pane)
+        window:perform_action(wezterm.action.ClearSelection, pane)
+      else
+        window:perform_action(wezterm.action.SendKey({ key = "c", mods = "CTRL" }), pane)
+      end
+    end),
+  })
+end
+
 -- Keep the Mac awake while WezTerm is open. caffeinate is bound to the WezTerm
 -- GUI process via `-w $PPID`, so the assertion is released automatically when
 -- WezTerm quits (nothing left running to keep the Mac awake afterwards).
