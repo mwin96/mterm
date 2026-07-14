@@ -10,9 +10,9 @@ Upstream WezTerm docs and guide at: https://wezterm.org/
 >
 > MTerm is a personal fork of [WezTerm](https://github.com/wezterm/wezterm) by Wez Furlong, built on the vertical-tabs work from [gilescope's](https://github.com/gilescope/wezterm) `giles-vertical-tabs-drag-reorder` branch. Upstream copyright and MIT license are preserved.
 
-![Screenshot](docs/screenshots/two.png)
+![Screenshot](docs/mterm/mterm-screenshot.png)
 
-*Screenshot of wezterm on macOS, running vim*
+*MTerm on macOS, running a Claude Code session with the vertical tab rail and telemetry card*
 
 ## Installation
 
