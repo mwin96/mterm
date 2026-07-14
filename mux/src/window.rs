@@ -6,6 +6,15 @@ use std::sync::Arc;
 static WIN_ID: ::std::sync::atomic::AtomicUsize = ::std::sync::atomic::AtomicUsize::new(0);
 pub type WindowId = usize;
 
+fn swap_adjacent_ranges<T>(items: &mut [T], start: usize, middle: usize, end: usize) -> bool {
+    if start >= middle || middle >= end || end > items.len() {
+        return false;
+    }
+
+    items[start..end].rotate_left(middle - start);
+    true
+}
+
 pub struct Window {
     id: WindowId,
     tabs: Vec<Arc<Tab>>,
@@ -98,6 +107,21 @@ impl Window {
 
     pub fn get_by_idx(&self, idx: usize) -> Option<&Arc<Tab>> {
         self.tabs.get(idx)
+    }
+
+    pub fn swap_adjacent_tab_ranges(&mut self, start: usize, middle: usize, end: usize) -> bool {
+        let active_tab_id = self.get_active().map(|tab| tab.tab_id());
+        if !swap_adjacent_ranges(&mut self.tabs, start, middle, end) {
+            return false;
+        }
+
+        if let Some(active_tab_id) = active_tab_id {
+            if let Some(active_idx) = self.idx_by_id(active_tab_id) {
+                self.active = active_idx;
+            }
+        }
+        self.invalidate();
+        true
     }
 
     pub fn can_close_without_prompting(&self) -> bool {
@@ -264,5 +288,27 @@ impl Window {
         if invalidated {
             self.invalidate();
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::swap_adjacent_ranges;
+
+    #[test]
+    fn swaps_adjacent_ranges_as_units() {
+        let mut values = vec![0, 1, 2, 3, 4, 5];
+
+        assert!(swap_adjacent_ranges(&mut values, 1, 3, 6));
+        assert_eq!(values, vec![0, 3, 4, 5, 1, 2]);
+    }
+
+    #[test]
+    fn rejects_invalid_adjacent_ranges() {
+        let mut values = vec![0, 1, 2];
+
+        assert!(!swap_adjacent_ranges(&mut values, 1, 1, 3));
+        assert!(!swap_adjacent_ranges(&mut values, 0, 2, 4));
+        assert_eq!(values, vec![0, 1, 2]);
     }
 }

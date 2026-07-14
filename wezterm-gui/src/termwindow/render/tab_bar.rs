@@ -1,5 +1,6 @@
 use crate::quad::TripleLayerQuadAllocator;
 use crate::termwindow::render::RenderScreenLineParams;
+use crate::termwindow::{UIItem, UIItemType};
 use crate::utilsprites::RenderMetrics;
 use config::{ConfigHandle, DimensionContext, TabBarPosition};
 use mux::renderable::RenderableDimensions;
@@ -37,6 +38,7 @@ impl crate::TermWindow {
             }
 
             self.ui_items.append(&mut self.paint_fancy_tab_bar()?);
+            self.paint_vertical_tab_bar_resize_handle(layers)?;
             return Ok(());
         }
 
@@ -160,6 +162,68 @@ impl crate::TermWindow {
     }
 
     pub fn tab_bar_pixel_width(&self) -> f32 {
+        if self.is_tab_bar_vertical() {
+            if let Some(width) = self.tab_bar_width_override {
+                let border = self.get_os_border();
+                let min_terminal_width = self.render_metrics.cell_size.width as f32 * 20.;
+                let max_width = (self.dimensions.pixel_width as f32
+                    - (border.left + border.right).get() as f32
+                    - min_terminal_width)
+                    .max(0.);
+                let min_width = 160_f32.min(max_width);
+                return width.clamp(min_width, max_width);
+            }
+        }
         Self::tab_bar_pixel_width_impl(&self.config, &self.render_metrics, &self.dimensions)
+    }
+
+    fn paint_vertical_tab_bar_resize_handle(
+        &mut self,
+        layers: &mut TripleLayerQuadAllocator,
+    ) -> anyhow::Result<()> {
+        if !self.is_tab_bar_vertical() {
+            return Ok(());
+        }
+
+        const HANDLE_WIDTH: usize = 10;
+
+        let border = self.get_os_border();
+        let tab_bar_width = self.tab_bar_pixel_width() as usize;
+        let boundary_x = match self.resolved_tab_bar_position() {
+            TabBarPosition::Left => border.left.get() as usize + tab_bar_width,
+            TabBarPosition::Right => self
+                .dimensions
+                .pixel_width
+                .saturating_sub(border.right.get() as usize + tab_bar_width),
+            _ => return Ok(()),
+        };
+        let top = border.top.get() as usize;
+        let height = self
+            .dimensions
+            .pixel_height
+            .saturating_sub(top + border.bottom.get() as usize);
+
+        self.ui_items.push(UIItem {
+            x: boundary_x.saturating_sub(HANDLE_WIDTH / 2),
+            y: top,
+            width: HANDLE_WIDTH,
+            height,
+            item_type: UIItemType::TabBarResizeHandle,
+        });
+
+        let color = self.palette().split.to_linear();
+        self.filled_rectangle(
+            layers,
+            2,
+            euclid::rect(
+                boundary_x.saturating_sub(1) as f32,
+                top as f32,
+                1.,
+                height as f32,
+            ),
+            color,
+        )?;
+
+        Ok(())
     }
 }

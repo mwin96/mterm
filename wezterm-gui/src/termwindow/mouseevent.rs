@@ -40,6 +40,7 @@ impl super::TermWindow {
                 self.update_title_post_status();
             }
             UIItemType::CloseTab(_)
+            | UIItemType::TabBarResizeHandle
             | UIItemType::AboveScrollThumb
             | UIItemType::BelowScrollThumb
             | UIItemType::ScrollThumb
@@ -51,6 +52,7 @@ impl super::TermWindow {
         match item.item_type {
             UIItemType::TabBar(_) => {}
             UIItemType::CloseTab(_)
+            | UIItemType::TabBarResizeHandle
             | UIItemType::AboveScrollThumb
             | UIItemType::BelowScrollThumb
             | UIItemType::ScrollThumb
@@ -345,9 +347,51 @@ impl super::TermWindow {
         self.dragging.replace((item, start_event));
     }
 
-    fn find_tab_item_by_idx(&mut self, target_tab_idx: TabId) -> Option<&UIItem> {
+    fn drag_tab_bar_resize(
+        &mut self,
+        item: UIItem,
+        start_event: MouseEvent,
+        event: MouseEvent,
+        context: &dyn WindowOps,
+    ) {
+        let direction = if self.resolved_tab_bar_position() == config::TabBarPosition::Left {
+            1.
+        } else {
+            -1.
+        };
+        let delta = (event.coords.x - start_event.coords.x) as f32 * direction;
+        let min_terminal_width = self.render_metrics.cell_size.width as f32 * 20.;
+        let border = self.get_os_border();
+        let max_width = (self.dimensions.pixel_width as f32
+            - (border.left + border.right).get() as f32
+            - min_terminal_width)
+            .max(0.);
+        let min_width = 160_f32.min(max_width);
+        let width = (self.tab_bar_pixel_width() + delta).clamp(min_width, max_width);
+
+        if self.tab_bar_width_override != Some(width) {
+            self.tab_bar_width_override = Some(width);
+            self.invalidate_fancy_tab_bar();
+            if let Some(window) = self.window.as_ref().cloned() {
+                let dimensions = self.dimensions;
+                self.apply_dimensions(&dimensions, None, &window);
+            }
+            context.invalidate();
+        }
+
+        self.dragging.replace((item, event));
+    }
+
+    fn find_tab_item_by_idx(&self, target_tab_idx: TabId) -> Option<&UIItem> {
         self.ui_items.iter().find(|item| match item.item_type {
             UIItemType::TabBar(TabBarItem::Tab { tab_idx, .. }) => tab_idx == target_tab_idx,
+            _ => false,
+        })
+    }
+
+    fn find_group_header_item_by_idx(&self, target_tab_idx: TabId) -> Option<&UIItem> {
+        self.ui_items.iter().find(|item| match item.item_type {
+            UIItemType::TabBar(TabBarItem::GroupHeader { tab_idx }) => tab_idx == target_tab_idx,
             _ => false,
         })
     }
@@ -362,7 +406,11 @@ impl super::TermWindow {
         // Project the pointer onto the axis the tab bar runs along: x for a
         // horizontal bar (Top/Bottom), y for a vertical bar (Left/Right).
         let vertical = self.config.resolved_tab_bar_position().is_vertical();
-        let current = if vertical { event.coords.y } else { event.coords.x };
+        let current = if vertical {
+            event.coords.y
+        } else {
+            event.coords.x
+        };
         let start = if vertical {
             start_event.coords.y
         } else {
@@ -396,6 +444,105 @@ impl super::TermWindow {
         self.dragging.replace((item, event));
     }
 
+    fn drag_reorder_group(
+        &mut self,
+        mut item: UIItem,
+        tab_idx: TabId,
+        start_event: MouseEvent,
+        event: MouseEvent,
+        context: &dyn WindowOps,
+    ) {
+        let current = event.coords.y;
+        let start = start_event.coords.y;
+        if current == start {
+            self.dragging.replace((item, event));
+            return;
+        }
+        let drag_forward = current > start;
+
+        let mux = Mux::get();
+        let ranges = mux.get_window(self.mux_window_id).and_then(|window| {
+            let len = window.len();
+            let is_group_start = |idx: usize| {
+                window
+                    .get_by_idx(idx)
+                    .and_then(|tab| tab.get_group())
+                    .is_some()
+            };
+            if !is_group_start(tab_idx) {
+                return None;
+            }
+
+            let current_end = (tab_idx + 1..len)
+                .find(|idx| is_group_start(*idx))
+                .unwrap_or(len);
+
+            if drag_forward {
+                if current_end == len {
+                    return None;
+                }
+                let next_end = (current_end + 1..len)
+                    .find(|idx| is_group_start(*idx))
+                    .unwrap_or(len);
+                Some((
+                    tab_idx,
+                    current_end,
+                    next_end,
+                    tab_idx + (next_end - current_end),
+                    current_end,
+                ))
+            } else {
+                (0..tab_idx)
+                    .rev()
+                    .find(|idx| is_group_start(*idx))
+                    .map(|previous_start| {
+                        (
+                            previous_start,
+                            tab_idx,
+                            current_end,
+                            previous_start,
+                            previous_start,
+                        )
+                    })
+            }
+        });
+
+        let (range_start, middle, range_end, new_tab_idx, target_tab_idx) = match ranges {
+            Some(ranges) => ranges,
+            None => {
+                self.dragging.replace((item, event));
+                return;
+            }
+        };
+        let target = match self.find_group_header_item_by_idx(target_tab_idx) {
+            Some(target) => target.clone(),
+            None => {
+                self.dragging.replace((item, event));
+                return;
+            }
+        };
+        let target_midpoint = target.y.saturating_add(target.height / 2) as isize;
+        let over_threshold = (drag_forward && current > target_midpoint)
+            || (!drag_forward && current < target_midpoint);
+
+        if over_threshold {
+            let moved = mux
+                .get_window_mut(self.mux_window_id)
+                .map(|mut window| window.swap_adjacent_tab_ranges(range_start, middle, range_end))
+                .unwrap_or(false);
+            if moved {
+                item = target;
+                item.item_type = UIItemType::TabBar(TabBarItem::GroupHeader {
+                    tab_idx: new_tab_idx,
+                });
+                self.invalidate_fancy_tab_bar();
+                context.invalidate();
+            }
+        }
+
+        self.dragging.replace((item, event));
+    }
+
     fn drag_ui_item(
         &mut self,
         item: UIItem,
@@ -412,8 +559,14 @@ impl super::TermWindow {
             UIItemType::ScrollThumb => {
                 self.drag_scroll_thumb(item, start_event, event, context);
             }
+            UIItemType::TabBarResizeHandle => {
+                self.drag_tab_bar_resize(item, start_event, event, context);
+            }
             UIItemType::TabBar(TabBarItem::Tab { tab_idx, .. }) => {
                 self.drag_reorder_tab(item, tab_idx, start_event, event);
+            }
+            UIItemType::TabBar(TabBarItem::GroupHeader { tab_idx }) => {
+                self.drag_reorder_group(item, tab_idx, start_event, event, context);
             }
             _ => {
                 log::error!("drag not implemented for {:?}", item);
@@ -446,6 +599,9 @@ impl super::TermWindow {
             UIItemType::Split(split) => {
                 self.mouse_event_split(item, split, event, context);
             }
+            UIItemType::TabBarResizeHandle => {
+                self.mouse_event_tab_bar_resize_handle(item, event, context);
+            }
             UIItemType::CloseTab(idx) => {
                 self.mouse_event_close_tab(idx, event, context);
             }
@@ -462,6 +618,11 @@ impl super::TermWindow {
             WMEK::Press(MousePress::Left) => {
                 log::debug!("Should close tab {}", idx);
                 self.close_specific_tab(idx, true);
+            }
+            WMEK::Press(MousePress::Right) => {
+                if self.config.resolved_tab_bar_position().is_vertical() {
+                    self.show_tab_action_picker(idx, false);
+                }
             }
             _ => {}
         }
@@ -520,6 +681,50 @@ impl super::TermWindow {
         .detach();
     }
 
+    fn do_new_group_button_click(&mut self, tab_idx: usize) {
+        let pane = match self.get_active_pane_or_overlay() {
+            Some(pane) => pane,
+            None => return,
+        };
+        let tab_id = {
+            let mux = Mux::get();
+            let window = match mux.get_window(self.mux_window_id) {
+                Some(window) => window,
+                None => return,
+            };
+            match window.get_by_idx(tab_idx) {
+                Some(tab) => tab.tab_id(),
+                None => return,
+            }
+        };
+
+        async fn dispatch_new_group_button(
+            lua: Option<Rc<mlua::Lua>>,
+            window: GuiWin,
+            pane: MuxPane,
+            action_id: String,
+        ) -> anyhow::Result<()> {
+            if let Some(lua) = lua {
+                let args = lua.pack_multi((window, pane, action_id))?;
+                config::lua::emit_event(&lua, ("right-click-tab-action".to_string(), args))
+                    .await
+                    .map_err(|error| {
+                        log::error!("while processing category-button-click event: {:#}", error);
+                        error
+                    })?;
+            }
+            Ok(())
+        }
+
+        let window = GuiWin::new(self);
+        let pane = MuxPane(pane.pane_id());
+        let action_id = format!("add-group:{tab_id}");
+        promise::spawn::spawn(config::with_lua_config_on_main_thread(move |lua| {
+            dispatch_new_group_button(lua, window, pane, action_id)
+        }))
+        .detach();
+    }
+
     pub fn mouse_event_tab_bar(
         &mut self,
         item: UIItem,
@@ -534,8 +739,14 @@ impl super::TermWindow {
                     // For reordering tabs
                     self.dragging = Some((item, event));
                 }
+                TabBarItem::GroupHeader { .. } => {
+                    self.dragging = Some((item, event));
+                }
                 TabBarItem::NewTabButton { .. } => {
                     self.do_new_tab_button_click(MousePress::Left);
+                }
+                TabBarItem::NewGroupButton { tab_idx } => {
+                    self.do_new_group_button_click(tab_idx);
                 }
                 TabBarItem::None | TabBarItem::LeftStatus | TabBarItem::RightStatus => {
                     let maximized = self
@@ -587,24 +798,34 @@ impl super::TermWindow {
                 TabBarItem::NewTabButton { .. } => {
                     self.do_new_tab_button_click(MousePress::Middle);
                 }
-                TabBarItem::None
+                TabBarItem::GroupHeader { .. }
+                | TabBarItem::NewGroupButton { .. }
+                | TabBarItem::None
                 | TabBarItem::LeftStatus
                 | TabBarItem::RightStatus
                 | TabBarItem::WindowButton(_) => {}
             },
             WMEK::Press(MousePress::Right) => match tab_bar_item {
-                TabBarItem::Tab { .. } => {
-                    self.show_tab_navigator();
+                TabBarItem::Tab { tab_idx, .. } => {
+                    if self.config.resolved_tab_bar_position().is_vertical() {
+                        self.show_tab_action_picker(tab_idx, false);
+                    } else {
+                        self.show_tab_navigator();
+                    }
+                }
+                TabBarItem::GroupHeader { tab_idx } => {
+                    self.show_tab_action_picker(tab_idx, true);
                 }
                 TabBarItem::NewTabButton { .. } => {
                     self.do_new_tab_button_click(MousePress::Right);
                 }
+                TabBarItem::NewGroupButton { tab_idx } => {
+                    self.do_new_group_button_click(tab_idx);
+                }
                 TabBarItem::None => {
                     self.show_tab_bar_position_picker();
                 }
-                TabBarItem::LeftStatus
-                | TabBarItem::RightStatus
-                | TabBarItem::WindowButton(_) => {}
+                TabBarItem::LeftStatus | TabBarItem::RightStatus | TabBarItem::WindowButton(_) => {}
             },
             WMEK::Move => match tab_bar_item {
                 TabBarItem::None | TabBarItem::LeftStatus | TabBarItem::RightStatus => {
@@ -622,7 +843,9 @@ impl super::TermWindow {
                 }
                 TabBarItem::WindowButton(_)
                 | TabBarItem::Tab { .. }
-                | TabBarItem::NewTabButton { .. } => {}
+                | TabBarItem::GroupHeader { .. }
+                | TabBarItem::NewTabButton { .. }
+                | TabBarItem::NewGroupButton { .. } => {}
             },
             WMEK::VertWheel(n) => {
                 if self.config.mouse_wheel_scrolls_tabs {
@@ -632,7 +855,13 @@ impl super::TermWindow {
             }
             _ => {}
         }
-        context.set_cursor(Some(MouseCursor::Arrow));
+        context.set_cursor(Some(
+            if matches!(tab_bar_item, TabBarItem::GroupHeader { .. }) {
+                MouseCursor::SizeUpDown
+            } else {
+                MouseCursor::Arrow
+            },
+        ));
     }
 
     pub fn mouse_event_above_scroll_thumb(
@@ -712,6 +941,18 @@ impl super::TermWindow {
             SplitDirection::Vertical => MouseCursor::SizeUpDown,
         }));
 
+        if event.kind == WMEK::Press(MousePress::Left) {
+            self.dragging.replace((item, event));
+        }
+    }
+
+    pub fn mouse_event_tab_bar_resize_handle(
+        &mut self,
+        item: UIItem,
+        event: MouseEvent,
+        context: &dyn WindowOps,
+    ) {
+        context.set_cursor(Some(MouseCursor::SizeLeftRight));
         if event.kind == WMEK::Press(MousePress::Left) {
             self.dragging.replace((item, event));
         }

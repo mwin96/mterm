@@ -45,6 +45,7 @@ struct TabInner {
     active: usize,
     zoomed: Option<Arc<dyn Pane>>,
     title: String,
+    group: Option<String>,
     recency: Recency,
 }
 
@@ -533,6 +534,31 @@ impl Tab {
         }
     }
 
+    pub fn get_group(&self) -> Option<String> {
+        self.inner.lock().group.clone()
+    }
+
+    pub fn set_group(&self, group: Option<&str>) {
+        let group = group
+            .map(str::trim)
+            .filter(|group| !group.is_empty())
+            .map(str::to_string);
+        let tab_id = {
+            let mut inner = self.inner.lock();
+            if inner.group == group {
+                return;
+            }
+            inner.group = group;
+            inner.id
+        };
+
+        if let Some(mux) = Mux::try_get() {
+            if let Some(window_id) = mux.window_containing_tab(tab_id) {
+                mux.notify(MuxNotification::WindowInvalidated(window_id));
+            }
+        }
+    }
+
     /// Called by the multiplexer client when building a local tab to
     /// mirror a remote tab.  The supplied `root` is the information
     /// about our counterpart in the remote server.
@@ -763,6 +789,7 @@ impl TabInner {
             active: 0,
             zoomed: None,
             title: String::new(),
+            group: None,
             recency: Recency::default(),
         }
     }
@@ -2524,5 +2551,24 @@ mod test {
     #[test]
     fn tab_is_send_and_sync() {
         assert!(is_send_and_sync::<Tab>());
+    }
+
+    #[test]
+    fn tab_group_names_are_normalized() {
+        let tab = Tab::new(&TerminalSize {
+            rows: 24,
+            cols: 80,
+            pixel_width: 800,
+            pixel_height: 600,
+            dpi: 96,
+        });
+
+        assert_eq!(tab.get_group(), None);
+
+        tab.set_group(Some("  Pages related stuff  "));
+        assert_eq!(tab.get_group().as_deref(), Some("Pages related stuff"));
+
+        tab.set_group(Some("   "));
+        assert_eq!(tab.get_group(), None);
     }
 }

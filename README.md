@@ -4,6 +4,12 @@
 
 User facing docs and guide at: https://wezterm.org/
 
+> [!NOTE]
+> This fork includes the **Quietly Alive** vertical AI-session rail, named tab categories, activity subtitles, focus-safe command panels, and translucent animated theme.
+> See [`docs/quietly-alive/README.md`](docs/quietly-alive/README.md) for controls, installation, architecture, adapters, and the metadata contract.
+>
+> Quietly Alive is a personal fork of [WezTerm](https://github.com/wezterm/wezterm) by Wez Furlong, built on the vertical-tabs work from [gilescope's](https://github.com/gilescope/wezterm) `giles-vertical-tabs-drag-reorder` branch. Upstream copyright and MIT license are preserved.
+
 ![Screenshot](docs/screenshots/two.png)
 
 *Screenshot of wezterm on macOS, running vim*

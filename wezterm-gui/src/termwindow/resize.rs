@@ -507,7 +507,9 @@ impl super::TermWindow {
             0
         };
         let tab_bar_width = if show_tab_bar && is_vertical {
-            Self::tab_bar_pixel_width_impl(&config, &render_metrics, &self.dimensions) as usize
+            self.tab_bar_width_override.unwrap_or_else(|| {
+                Self::tab_bar_pixel_width_impl(&config, &render_metrics, &self.dimensions)
+            }) as usize
         } else {
             0
         };

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "type": "command",
+        "matcher": "bash",
+        "bash": "$HOME/.copilot/hooks/wezterm-shell-pane.sh --hook",
+        "timeoutSec": 5
+      }
+    ]
+  }
+}

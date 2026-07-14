@@ -24,7 +24,9 @@ pub enum TabBarItem {
     LeftStatus,
     RightStatus,
     Tab { tab_idx: usize, active: bool },
+    GroupHeader { tab_idx: usize },
     NewTabButton,
+    NewGroupButton { tab_idx: usize },
     WindowButton(IntegratedTitleButton),
 }
 
@@ -32,6 +34,8 @@ pub enum TabBarItem {
 pub struct TabEntry {
     pub item: TabBarItem,
     pub title: Line,
+    pub group: Option<String>,
+    pub subtitle: Option<String>,
     x: usize,
     width: usize,
 }
@@ -40,6 +44,29 @@ pub struct TabEntry {
 struct TitleText {
     items: Vec<FormatItem>,
     len: usize,
+}
+
+const ACTIVITY_TITLE_MARKER: &str = " · doing: ";
+
+fn normalize_tab_activity(activity: &str) -> Option<String> {
+    let activity = activity.lines().next().unwrap_or("").trim();
+    if activity.is_empty() {
+        None
+    } else {
+        Some(activity.chars().take(48).collect())
+    }
+}
+
+fn tab_activity(tab: &TabInformation) -> Option<String> {
+    let pane = tab.active_pane.as_ref()?;
+    pane.user_vars
+        .get("WEZTERM_ACTIVITY")
+        .and_then(|activity| normalize_tab_activity(activity))
+        .or_else(|| {
+            pane.title
+                .rsplit_once(ACTIVITY_TITLE_MARKER)
+                .and_then(|(_, activity)| normalize_tab_activity(activity))
+        })
 }
 
 fn call_format_tab_title(
@@ -233,6 +260,8 @@ impl TabBarState {
             items: vec![TabEntry {
                 item: TabBarItem::None,
                 title: Line::from_text(" ", &CellAttributes::blank(), 1, None),
+                group: None,
+                subtitle: None,
                 x: 1,
                 width: 1,
             }],
@@ -326,6 +355,8 @@ impl TabBarState {
             items.push(TabEntry {
                 item: TabBarItem::WindowButton(*button),
                 title: title.to_owned(),
+                group: None,
+                subtitle: None,
                 x: *x,
                 width,
             });
@@ -454,6 +485,8 @@ impl TabBarState {
             items.push(TabEntry {
                 item: TabBarItem::LeftStatus,
                 title: left_status_line.clone(),
+                group: None,
+                subtitle: None,
                 x,
                 width: left_status_line.len(),
             });
@@ -507,6 +540,8 @@ impl TabBarState {
             items.push(TabEntry {
                 item: TabBarItem::Tab { tab_idx, active },
                 title,
+                group: tab_info[tab_idx].tab_group.clone(),
+                subtitle: tab_activity(&tab_info[tab_idx]),
                 x: tab_start_idx,
                 width,
             });
@@ -529,11 +564,26 @@ impl TabBarState {
             items.push(TabEntry {
                 item: TabBarItem::NewTabButton,
                 title: new_tab_button.clone(),
+                group: None,
+                subtitle: None,
                 x: button_start,
                 width,
             });
 
             x += width;
+
+            if config.resolved_tab_bar_position().is_vertical() && !tab_info.is_empty() {
+                items.push(TabEntry {
+                    item: TabBarItem::NewGroupButton {
+                        tab_idx: active_tab_no,
+                    },
+                    title: Line::with_width(0, SEQ_ZERO),
+                    group: None,
+                    subtitle: None,
+                    x,
+                    width: 0,
+                });
+            }
         }
 
         // Reserve place for integrated title buttons
@@ -591,6 +641,8 @@ impl TabBarState {
         items.push(TabEntry {
             item: TabBarItem::RightStatus,
             title: right_status_line.clone(),
+            group: None,
+            subtitle: None,
             x,
             width: status_space_available,
         });

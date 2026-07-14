@@ -8,6 +8,8 @@
 	<string>wezterm-gui</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.github.wez.wezterm</string>
+	<key>QuietlyAliveCustomBuild</key>
+	<string>1</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>

@@ -154,6 +154,7 @@ pub enum TermWindowNotif {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum UIItemType {
     TabBar(TabBarItem),
+    TabBarResizeHandle,
     CloseTab(usize),
     AboveScrollThumb,
     ScrollThumb,
@@ -216,6 +217,7 @@ pub struct TabInformation {
     pub active_pane: Option<PaneInformation>,
     pub window_id: MuxWindowId,
     pub tab_title: String,
+    pub tab_group: Option<String>,
 }
 
 impl UserData for TabInformation {
@@ -245,6 +247,7 @@ impl UserData for TabInformation {
         });
         fields.add_field_method_get("window_id", |_, this| Ok(this.window_id));
         fields.add_field_method_get("tab_title", |_, this| Ok(this.tab_title.clone()));
+        fields.add_field_method_get("tab_group", |_, this| Ok(this.tab_group.clone()));
         fields.add_field_method_get("window_title", |_, this| {
             let mux = Mux::get();
             let window = mux.get_window(this.window_id).ok_or_else(|| {
@@ -391,6 +394,7 @@ pub struct TermWindow {
     show_scroll_bar: bool,
     tab_bar: TabBarState,
     fancy_tab_bar: Option<box_model::ComputedElement>,
+    tab_bar_width_override: Option<f32>,
     pub right_status: String,
     pub left_status: String,
     last_ui_item: Option<UIItem>,
@@ -729,6 +733,7 @@ impl TermWindow {
             show_scroll_bar: config.enable_scroll_bar,
             tab_bar: TabBarState::default(),
             fancy_tab_bar: None,
+            tab_bar_width_override: None,
             right_status: String::new(),
             left_status: String::new(),
             last_mouse_coords: (0, -1),
@@ -2489,6 +2494,62 @@ impl TermWindow {
         self.show_input_selector(&args);
     }
 
+    pub fn show_tab_action_picker(&mut self, tab_idx: usize, group_only: bool) {
+        use config::keyassignment::{InputSelector, InputSelectorEntry, KeyAssignment};
+
+        let mux = Mux::get();
+        let (tab_id, group) = {
+            let window = match mux.get_window(self.mux_window_id) {
+                Some(window) => window,
+                None => return,
+            };
+            let tab = match window.get_by_idx(tab_idx) {
+                Some(tab) => tab,
+                None => return,
+            };
+            (tab.tab_id(), tab.get_group())
+        };
+
+        let mut choices = vec![];
+        if !group_only {
+            choices.push(InputSelectorEntry {
+                label: "Rename tab".to_string(),
+                id: Some(format!("rename-tab:{tab_id}")),
+            });
+        }
+
+        if group.is_some() {
+            choices.push(InputSelectorEntry {
+                label: "Rename divider".to_string(),
+                id: Some(format!("rename-group:{tab_id}")),
+            });
+            choices.push(InputSelectorEntry {
+                label: "Remove divider".to_string(),
+                id: Some(format!("remove-group:{tab_id}")),
+            });
+        } else {
+            choices.push(InputSelectorEntry {
+                label: "Add divider above".to_string(),
+                id: Some(format!("add-group:{tab_id}")),
+            });
+        }
+
+        let args = InputSelector {
+            action: Box::new(KeyAssignment::EmitEvent(
+                "right-click-tab-action".to_string(),
+            )),
+            title: group
+                .map(|name| format!("Divider: {name}"))
+                .unwrap_or_else(|| "Tab actions".to_string()),
+            choices,
+            fuzzy: false,
+            alphabet: "123".to_string(),
+            description: "Click an action or press Enter".to_string(),
+            fuzzy_description: String::new(),
+        };
+        self.show_input_selector(&args);
+    }
+
     fn show_launcher(&mut self) {
         let title = "Launcher".to_string();
         let args = LauncherActionArgs {
@@ -3585,6 +3646,7 @@ impl TermWindow {
                         .unwrap_or(false),
                     window_id: self.mux_window_id,
                     tab_title: tab.get_title(),
+                    tab_group: tab.get_group(),
                     active_pane: panes
                         .iter()
                         .find(|p| p.is_active)
