@@ -158,7 +158,13 @@ Differences from the Copilot adapter: labels come from the Claude Code session t
 
 ## Build the fork
 
-For a focused development build:
+A bare build produces the four shipping binaries (`wezterm`, `wezterm-gui`, `wezterm-mux-server`, `strip-ansi-escapes`) via the workspace `default-members`:
+
+```bash
+cargo build --release
+```
+
+For focused development iteration:
 
 ```bash
 cargo check -p wezterm-gui
@@ -187,7 +193,7 @@ winget install Microsoft.VisualStudio.2022.BuildTools --override "--quiet --wait
 winget install Rustlang.Rustup
 winget install StrawberryPerl.StrawberryPerl
 git submodule update --init --recursive
-cargo build -p wezterm -p wezterm-gui --release
+cargo build --release
 ```
 
 WezTerm reads `~/.config/wezterm/wezterm.lua` on Windows too, so the install is the same configuration and assets:

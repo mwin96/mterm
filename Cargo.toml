@@ -17,6 +17,14 @@ members = [
   "wezterm-surface",
   "wezterm-uds",
 ]
+# What a bare `cargo build` produces: the four binaries that ship. Tools like
+# sync-color-schemes and bidi/generate still build via --workspace or -p.
+default-members = [
+  "strip-ansi-escapes",
+  "wezterm",
+  "wezterm-gui",
+  "wezterm-mux-server",
+]
 resolver = "2"
 exclude = [
   "termwiz/codegen",
