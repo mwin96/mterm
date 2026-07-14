@@ -1,0 +1,59 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"~/.claude/hooks/session-status.sh ready\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"~/.claude/hooks/session-status.sh working\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"~/.claude/hooks/session-status.sh working\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"~/.claude/hooks/session-status.sh done\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"~/.claude/hooks/session-status.sh notification\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

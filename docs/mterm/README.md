@@ -176,6 +176,42 @@ codesign --verify --verbose=2 /Applications/WezTerm.app/Contents/MacOS/wezterm-g
 Quit and reopen WezTerm after replacing the GUI executable.
 Running GUI processes keep the old executable in memory.
 
+## Windows
+
+The fork builds and runs natively on Windows; the Rust feature code is platform-neutral.
+
+Build prerequisites: Visual Studio 2022 Build Tools with the C++ workload, Rust via rustup (`x86_64-pc-windows-msvc` host), and Strawberry Perl on `PATH` (the vendored OpenSSL build requires it).
+
+```powershell
+winget install Microsoft.VisualStudio.2022.BuildTools --override "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
+winget install Rustlang.Rustup
+winget install StrawberryPerl.StrawberryPerl
+git submodule update --init --recursive
+cargo build -p wezterm -p wezterm-gui --release
+```
+
+WezTerm reads `~/.config/wezterm/wezterm.lua` on Windows too, so the install is the same configuration and assets:
+
+```powershell
+New-Item -ItemType Directory -Force "$HOME\.config\wezterm\assets"
+Copy-Item docs\mterm\wezterm.lua "$HOME\.config\wezterm\wezterm.lua"
+Copy-Item docs\mterm\assets\mterm-aurora.png "$HOME\.config\wezterm\assets\"
+Copy-Item docs\mterm\assets\mterm-dots.png "$HOME\.config\wezterm\assets\"
+```
+
+Platform differences, all handled inside the bundled `wezterm.lua`:
+
+- Tab shortcuts use `Alt+Shift` instead of `Cmd+Shift` (`CMD` maps to the Windows key, which the OS owns, and `Ctrl+Shift` collides with WezTerm's copy and pane-navigation defaults).
+- The default shell is PowerShell.
+- Translucency uses the Acrylic system backdrop instead of macOS window blur.
+- The keep-awake `caffeinate` helper is macOS-only and is skipped.
+
+The configuration expects Hack Nerd Font, available from the [nerd-fonts releases](https://github.com/ryanoasis/nerd-fonts/releases) (`Hack.zip`). Without it, WezTerm falls back to its bundled JetBrains Mono and the layout still works.
+
+The Claude Code adapter works on Windows through Git Bash. States, labels, and activity subtitles all flow through the title fallback (ConPTY strips OSC 1337 user variables but passes titles). Two Windows specifics: `bash` must run as a login shell (`-l`) so the MSYS `PATH` is set up, and `jq` should be installed (`winget install jqlang.jq`). Copy `session-status.sh` to `~/.claude/hooks/` as above, then merge `hooks/claude-code/settings-hooks-windows.json` (instead of `settings-hooks.json`) into `~/.claude/settings.json`. It assumes Git for Windows at `C:\Program Files\Git`. `afplay` sounds are skipped automatically.
+
+`wezterm-shell-pane.sh` depends on `shlock`, `pgrep`, and `mkfifo` and currently remains macOS-only, so its `PreToolUse` Bash-matcher registration is omitted from the Windows hook file.
+
 ## Regenerate the ambient assets
 
 The generator uses macOS AppKit, ImageIO, and UniformTypeIdentifiers:

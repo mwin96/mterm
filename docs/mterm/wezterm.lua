@@ -313,6 +313,7 @@ if is_windows then
   config.win32_system_backdrop = "Acrylic"
   config.window_background_opacity = 0.7
   config.window_frame.font_size = 10.0
+  config.default_prog = { "powershell.exe", "-NoLogo" }
 end
 
 if is_macos then
@@ -528,34 +529,40 @@ wezterm.on("toggle-calm-mode", function(window)
   )
 end)
 
+-- CMD is the Windows key on Windows, where Win+Shift combos belong to the OS
+-- (Win+Shift+Arrow moves windows between monitors). Alt+Shift avoids both the
+-- OS shortcuts and WezTerm defaults like Ctrl+Shift+C (copy) and
+-- Ctrl+Shift+Arrow (pane navigation).
+local tab_mods = is_macos and "CMD|SHIFT" or "ALT|SHIFT"
+
 config.keys = {
   {
     key = "LeftArrow",
-    mods = "CMD|SHIFT",
+    mods = tab_mods,
     action = wezterm.action.MoveTabRelative(-1),
   },
   {
     key = "RightArrow",
-    mods = "CMD|SHIFT",
+    mods = tab_mods,
     action = wezterm.action.MoveTabRelative(1),
   },
   {
     key = "R",
-    mods = "CMD|SHIFT",
+    mods = tab_mods,
     action = wezterm.action_callback(function(window, pane)
       prompt_tab_rename(window, pane, window:active_tab():tab_id())
     end),
   },
   {
     key = "G",
-    mods = "CMD|SHIFT",
+    mods = tab_mods,
     action = wezterm.action_callback(function(window, pane)
       prompt_tab_group(window, pane, window:active_tab():tab_id())
     end),
   },
   {
     key = "C",
-    mods = "CMD|SHIFT",
+    mods = tab_mods,
     action = wezterm.action.EmitEvent("toggle-calm-mode"),
   },
 }
