@@ -5,7 +5,7 @@ It preserves normal terminal behavior while adding named categories, activity su
 
 This directory contains the complete user-level setup needed to reproduce the experience from this fork.
 
-![MTerm vertical tab rail](mterm-sidebar.png)
+![MTerm running a Claude Code session with the vertical tab rail and telemetry card](mterm-screenshot.png)
 
 ## Included files
 
