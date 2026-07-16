@@ -102,13 +102,13 @@ case $OSTYPE in
 
     ;;
   msys|cygwin)
-    zipdir=WezTerm-windows-$TAG_NAME
+    zipdir=MTerm-windows-$TAG_NAME
     if [[ "$BUILD_REASON" == "Schedule" ]] ; then
-      zipname=WezTerm-windows-nightly.zip
-      instname=WezTerm-nightly-setup
+      zipname=MTerm-windows-nightly.zip
+      instname=MTerm-nightly-setup
     else
       zipname=$zipdir.zip
-      instname=WezTerm-${TAG_NAME}-setup
+      instname=MTerm-${TAG_NAME}-setup
     fi
     rm -rf $zipdir $zipname
     mkdir $zipdir
