@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>WezTerm</string>
+	<string>MTerm</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -49,11 +49,11 @@
 	<key>CFBundleIconFile</key>
 	<string>terminal.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.github.wez.wezterm</string>
+	<string>com.mwin96.mterm</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>WezTerm</string>
+	<string>MTerm</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -69,38 +69,38 @@
 	<key>MTermCustomBuild</key>
 	<string>1</string>
 	<key>NSAppleEventsUsageDescription</key>
-	<string>An application launched via WezTerm would like to access AppleScript.</string>
+	<string>An application launched via MTerm would like to access AppleScript.</string>
 	<key>NSCalendarsUsageDescription</key>
-	<string>An application launched via WezTerm would like to access calendar data.</string>
+	<string>An application launched via MTerm would like to access calendar data.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>An application launched via WezTerm would like to access the camera.</string>
+	<string>An application launched via MTerm would like to access the camera.</string>
 	<key>NSContactsUsageDescription</key>
-	<string>An application launched via WezTerm wants to access your contacts.</string>
+	<string>An application launched via MTerm wants to access your contacts.</string>
 	<key>NSDocumentsFolderUsageDescription</key>
-	<string>An application launched via WezTerm would like to access your Documents folder.</string>
+	<string>An application launched via MTerm would like to access your Documents folder.</string>
 	<key>NSDownloadsFolderUsageDescription</key>
-	<string>An application launched via WezTerm would like to access your Downloads folder.</string>
+	<string>An application launched via MTerm would like to access your Downloads folder.</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>An application launched via WezTerm would like to access the local network.</string>
+	<string>An application launched via MTerm would like to access the local network.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>An application launched via WezTerm would like to access your location information, even in the background.</string>
+	<string>An application launched via MTerm would like to access your location information, even in the background.</string>
 	<key>NSLocationUsageDescription</key>
-	<string>An application launched via WezTerm would like to access your location information.</string>
+	<string>An application launched via MTerm would like to access your location information.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>An application launched via WezTerm would like to access your location information while active.</string>
+	<string>An application launched via MTerm would like to access your location information while active.</string>
 	<key>NSMainNibFile</key>
 	<string></string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>An application launched via WezTerm would like to access your microphone.</string>
+	<string>An application launched via MTerm would like to access your microphone.</string>
 	<key>NSRemindersUsageDescription</key>
-	<string>An application launched via WezTerm would like to access your reminders.</string>
+	<string>An application launched via MTerm would like to access your reminders.</string>
 	<key>NSRequiresAquaSystemAppearance</key>
 	<string>NO</string>
 	<key>NSSupportsAutomaticGraphicsSwitching</key>
 	<true/>
 	<key>NSSystemAdministrationUsageDescription</key>
-	<string>An application launched via WezTerm requires elevated permission.</string>
+	<string>An application launched via MTerm requires elevated permission.</string>
 </dict>
 </plist>
